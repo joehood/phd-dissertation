@@ -1,0 +1,567 @@
+
+\chapter{QDL Simulator Implementations}\label{chap:simulator}
+
+Two implementations have been developed for simulating systems with the QDL method; a MATLAB implementation for efficient simulation of linear systems, and a Python implementation for fast prototyping of a QDL simulator that can support non-linear models and advanced QSS integration methods. 
+
+\section{MATLAB QDL Implementation} 
+
+An object-oriented implementation of a QDL simulator was implemented in MATLAB script that is suitable for linear QDL system models. The full source code of this implementation is included in Appendix \ref{chap:matlab_source}. 
+
+The key objects of the MATLAB script QDL implementation are
+
+\begin{itemize}
+    \item{\textbf{QdlSystem}: Contains the collection of QDL atom objects, the system matrices, the main simulator algorithm, stimulus implementations and plotting utilities.}
+    \item{\textbf{QdlNode}: The generic QDL node atom model}
+    \item{\textbf{QdlBranch}: The generic QDL branch atom model}
+    \item{\textbf{QdlSimulum}: The generic QDL stimulus interface.}
+\end{itemize}
+
+Example source code for a QDL simulation system definition is listed below for a 30 second simulation of a dc motor. The motor is excited by a PWM voltage source and loaded with a  torque load that steps from $0$ to $0.5 Nm$ at $10$ seconds. 
+
+\bigskip
+
+\begin{lstlisting}
+dQ = 0.1
+
+Va = 10;
+Ra = 0.1;
+La = 0.01;
+Ke = 0.1;
+Kt = 0.1;
+Jm = 0.1;
+Bm = 0.001;
+Tm = 0.0;
+
+sys = QdlSystem(dQ);
+
+va = QdlNode('va (V) (100Hz d=0.5)', 0, 0, 0);
+va.stim_type = QdlSystem.StimSource;
+va.source_type = QdlSystem.SourcePWM;
+va.freq = 100; 
+va.duty = 0.5; 
+va.v1 = Va; 
+va.v2 = 0; 
+
+gnd = QdlNode('ground', 0, 0, 0);
+gnd.stim_type = QdlSystem.StimSource;
+gnd.source_type = QdlSystem.SourceDC;
+gnd.vdc = 0.0; 
+
+nmech = QdlNode('shaft speed (rad/s)', Jm, Bm, Tm);
+
+barm = QdlBranch('armature current (A)', La, Ra, 0);
+barm.connect(va, gnd);
+
+barm.add_tnode(nmech, -Ke);
+nmech.add_sbranch(barm, Kt);
+
+sys.add_node(va);
+sys.add_node(gnd);
+sys.add_node(nmech);
+sys.add_branch(barm);
+
+sys.init();
+sys.runto(10);
+sys.H(3) = -0.5;  % step load torque
+sys.runto(20);
+    
+\end{lstlisting}
+
+The node and branch device constructors have arguments for the primary component coefficients (namely $L$, $R$, $E$, $C$, $B$, and $H$), and the controlled source connections are realized via add\_tnode(), add\_zbranch(), add\_sbranch() and add\_bnode() functions for the branch and node atoms. This allows an arbitrary number of controlled sources to be added to the node and branch atoms. The simulator is run via the runto() function, that can be called multiple times sequentially, allowing discrete event changes to be introduced to any system variable during the simulation. Various quantized source types are available. Used here is a PWM source. These sources create discrete events that are pushed into the event queue along with the QSS integrator scheduled events.
+
+\section{Python QDL Implementation} 
+
+For the fast prototyping of more advanced integrators, quantizers, sources, devices and system models, Python was chosen as the language of choice. The full source code of this implementation is included in Appendix \ref{chap:python_source}. 
+
+The key objects of the Python QDL framework are
+
+\begin{itemize}
+    \item{\textbf{qdl.System}: Contains the collection of QDL device objects, the main simulator algorithms, reference ODE solutions, stimulus implementations and plotting utilities.}
+    \item{\textbf{qdl.Atom}: A generic QDL atom model}
+    \item{\textbf{qdl.StateAtom}: A QDL state atom model where the QDEVS functions are implemented.}
+    \item{\textbf{qdl.SourceAtom}: A source atom model for quantized input signal components, and}
+    \item{\textbf{qdl.Device}: The generic QDL device interface, a collection of QDL atoms, connection ports, time derivative and Jacobian cell functions.}
+\end{itemize}
+
+In addition to the framework objects, the Python QDL implementation also has an extensive hierarchical device library, including complex devices such as the three-phase electric machines used in chapters \ref{chap:syncmach} and \ref{chap:powersys}.
+
+As a first example of QDL Python model definitions, the LIM Branch and Node components are listed below. The LIM atom coefficients and Jacobian matrix components are determined at run time using delegate functions (such as $a_{ii}$, and $b_{ij}$, etc.), allowing non-linear and time-varying behavior to be modeled.
+
+\bigskip 
+
+\begin{lstlisting}
+class LimNode(Device):
+
+    def __init__(self, name, c, g=0.0, h0=0.0, v0=0.0,
+                 source_type=SourceType.CONSTANT, h1=0.0,
+                 h2=0.0, ha=0.0, freq=0.0, phi=0.0, duty=0.0,
+                 t1=0.0, t2=0.0, dq=None):
+
+        Device.__init__(self, name)
+
+        self.c = c
+        self.g = g
+
+        self.h = SourceAtom("h", source_type=source_type,
+                            x0=h0, x1=h1, x2=h2, xa=ha,
+                            freq=freq, phi=phi, duty=duty,
+                            t1=t1, t2=t2, dq=dq, units="A")
+
+        self.voltage = StateAtom("voltage", x0=0.0,
+                                 coeffunc=self.aii,
+                                 dq=dq, units="V")
+
+        self.add_atoms(self.h, self.voltage)
+        
+        self.voltage.add_connection(self.h, coeffunc=self.bii)
+        
+        self.voltage.add_jacfunc(self.voltage, self.aii)
+
+    def connect(self, branch, terminal="i"):
+
+        if terminal == "i":
+            self.voltage.add_connection(branch.current, 
+                                        coeffunc=self.aij)
+                                        
+            self.voltage.add_jacfunc(branch.current, self.aij)
+
+        elif terminal == "j":
+            self.voltage.add_connection(branch.current,  
+                                        coeffunc=self.aji)
+                                        
+            self.voltage.add_jacfunc(branch.current, self.aji)
+
+    def aii(self, v):
+        return -self.g / self.c
+
+    def bii(self):
+        return 1.0 / self.c
+
+    def aij(self, v, i):
+        return -1.0 / self.c
+
+    def aji(self, i, v):
+        return 1.0 / self.c
+
+
+class LimBranch(Device):
+
+    def __init__(self, name, l, r=0.0, e0=0.0, i0=0.0,
+                 source_type=SourceType.CONSTANT, e1=0.0,
+                 e2=0.0, ea=0.0, freq=0.0, phi=0.0,
+                 duty=0.0, t1=0.0, t2=0.0, dq=None):
+
+        Device.__init__(self, name)
+
+        self.l = l
+        self.r = r
+
+        self.e = SourceAtom("e", source_type=source_type,
+                            x0=e0, x1=e1, x2=e2, xa=ea,
+                            freq=freq, phi=phi, duty=duty,
+                            t1=t1, t2=t2, dq=dq, units="V")
+
+        self.current = StateAtom("current", x0=0.0,
+                                 coeffunc=self.aii,
+                                 dq=dq, units="A")
+
+        self.add_atoms(self.e, self.current)
+        
+        self.current.add_connection(self.e,
+                                    coeffunc=self.bii)
+        
+        self.current.add_jacfunc(self.current, self.aii)
+
+    def connect(self, inode, jnode):
+
+        self.current.add_connection(inode.voltage,
+                                    coeffunc=self.aij)
+        
+        self.current.add_connection(jnode.voltage,
+                                    coeffunc=self.aji)
+        
+        self.current.add_jacfunc(inode.voltage, self.aij)
+        self.current.add_jacfunc(jnode.voltage, self.aji)
+
+    def aii(self, i):
+        return -self.r / self.l
+
+    def bii(self):
+        return 1.0 / self.l
+
+    def aij(self, i, v):
+        return 1.0 / self.l
+
+    def aji(self, v, i):
+        return -1.0 / self.l
+\end{lstlisting}
+
+As an example of a more complex device, the source for the Synchronous Machine in the DQ frame is listed below. This example contains many complex derivatives and Jacobian matrix components encoded in delegate functions in the Python class definition.
+
+\bigskip
+
+\begin{lstlisting}
+class SyncMachineDQ(Device):
+
+    def __init__(self, name, Psm=25.0e6, VLL=4160.0, ws=60.0*PI,
+        P=4, pf=0.80, rs=3.00e-3, Lls=0.20e-3, Lmq=2.00e-3,
+        Lmd=2.00e-3, rkq=5.00e-3, Llkq=0.04e-3, rkd=5.00e-3,
+        Llkd=0.04e-3, rfd=20.0e-3, Llfd=0.15e-3, vfdb=90.1,
+        Kp=10.0e4, Ki=10.0e4, J=4221.7, fkq0=0.0, fkd0=0.0,
+        ffd0=0.0, wr0=60.0*PI, th0=0.0, iqs0=0.0, ids0=0.0,
+        dq_i=1e-2, dq_f=1e-2, dq_wr=1e-1, dq_th=1e-3, dq_v=1e0):
+        
+        self.name = name  
+        Device.__init__(self, name)
+        
+        self.Psm  = Psm
+        self.VLL  = VLL
+        self.ws   = ws
+        self.P    = P
+        self.pf   = pf
+        self.rs   = rs
+        self.Lls  = Lls
+        self.Lmq  = Lmq
+        self.Lmd  = Lmd
+        self.rkq  = rkq
+        self.Llkq = Llkq
+        self.rkd  = rkd
+        self.Llkd = Llkd
+        self.rfd  = rfd
+        self.Llfd = Llfd
+        self.vfdb = vfdb
+        self.Kp   = Kp
+        self.Ki   = Ki
+        self.J    = J
+        
+        # set intial conditions:
+        
+        self.iqs0 = iqs0
+        self.ids0 = ids0
+        self.fkq0 = fkq0
+        self.fkd0 = fkd0
+        self.ffd0 = ffd0
+        self.wr0  = wr0
+        self.th0  = th0 
+        
+        # cached derived impedances:
+        
+        self.Lq = Lls + (Lmq * Llkq) / (Llkq + Lmq)
+        self.Ld = (Lls + (Lmd * Llfd * Llkd) 
+                  / (Lmd * Llfd + Lmd * Llkd + Llfd * Llkd))
+        
+        # atoms:
+        
+        self.ids = StateAtom("ids", x0=ids0, derfunc=self.dids,
+                             units="A",     dq=dq_i)
+                             
+        self.iqs = StateAtom("iqs", x0=iqs0, derfunc=self.diqs, 
+                             units="A",     dq=dq_i)
+                             
+        self.fkq = StateAtom("fkq", x0=fkq0, derfunc=self.dfkq, 
+                             units="Wb",    dq=dq_f)
+                             
+        self.fkd = StateAtom("fkd", x0=fkd0, derfunc=self.dfkd, 
+                             units="Wb",    dq=dq_f)
+                             
+        self.ffd = StateAtom("ffd", x0=ffd0, derfunc=self.dffd,
+                             units="Wb",    dq=dq_f)
+                             
+        self.wr  = StateAtom("wr",  x0=wr0,  derfunc=self.dwr,
+                             units="rad/s", dq=dq_wr)
+                             
+        self.th  = StateAtom("th",  x0=th0,  derfunc=self.dth, 
+                             units="rad",   dq=dq_th)
+        
+        self.add_atoms(self.ids, self.iqs, self.fkq, self.fkd,
+                       self.ffd, self.wr,  self.th)
+        
+        # internal connections:
+        
+        self.ids.add_connection(self.iqs)
+        self.ids.add_connection(self.wr )
+        self.ids.add_connection(self.fkq)   
+        self.iqs.add_connection(self.ids)
+        self.iqs.add_connection(self.wr )
+        self.iqs.add_connection(self.fkd)
+        self.iqs.add_connection(self.ffd)      
+        self.fkd.add_connection(self.ffd)
+        self.fkd.add_connection(self.ids)
+        self.fkq.add_connection(self.iqs)       
+        self.ffd.add_connection(self.ids)
+        self.ffd.add_connection(self.fkd)      
+        self.wr.add_connection( self.ids)
+        self.wr.add_connection( self.iqs)
+        self.wr.add_connection( self.fkq)
+        self.wr.add_connection( self.fkd)
+        self.wr.add_connection( self.ffd)
+        self.wr.add_connection( self.th )
+        self.th.add_connection( self.wr )
+        
+        # jacobian:
+        
+        self.ids.add_jacfunc(self.ids, self.jids_ids)
+        self.ids.add_jacfunc(self.iqs, self.jids_iqs)
+        self.ids.add_jacfunc(self.fkq, self.jids_fkq)
+        self.ids.add_jacfunc(self.wr , self.jids_wr )    
+        self.iqs.add_jacfunc(self.ids, self.jiqs_ids)
+        self.iqs.add_jacfunc(self.iqs, self.jiqs_iqs)
+        self.iqs.add_jacfunc(self.fkd, self.jiqs_fkd)
+        self.iqs.add_jacfunc(self.ffd, self.jiqs_ffd)
+        self.iqs.add_jacfunc(self.wr , self.jiqs_wr )       
+        self.fkq.add_jacfunc(self.iqs, self.jfkq_iqs)
+        self.fkq.add_jacfunc(self.fkq, self.jfkq_fkq)     
+        self.fkd.add_jacfunc(self.ids, self.jfkd_ids)
+        self.fkd.add_jacfunc(self.fkd, self.jfkd_fkd)
+        self.fkd.add_jacfunc(self.ffd, self.jfkd_ffd)    
+        self.ffd.add_jacfunc(self.ids, self.jffd_ids)
+        self.ffd.add_jacfunc(self.fkd, self.jffd_fkd)
+        self.ffd.add_jacfunc(self.ffd, self.jffd_ffd)        
+        self.wr.add_jacfunc( self.wr , self.jwr_wr  )
+        self.wr.add_jacfunc( self.ids, self.jwr_ids )
+        self.wr.add_jacfunc( self.iqs, self.jwr_iqs )
+        self.wr.add_jacfunc( self.fkq, self.jwr_fkq )
+        self.wr.add_jacfunc( self.fkd, self.jwr_fkd )
+        self.wr.add_jacfunc( self.ffd, self.jwr_ffd )
+        self.wr.add_jacfunc( self.th , self.jwr_th  )       
+        self.th.add_jacfunc( self.wr , self.jth_wr  )
+        
+        # DQ ports:
+        
+        self.id = self.iqs
+        self.iq = self.ids
+        self.vd = None
+        self.vq = None
+        
+        # input port:
+        
+        self.input = None  # avr output vref connection 
+    
+    def connect(self, bus, avr):
+    
+        self.vd = self.iqs.add_connection(bus.vq)
+        self.vq = self.ids.add_connection(bus.vd)
+        self.input = self.ffd.add_connection(avr.vfd, self.vfdb)
+        
+        self.iqs.add_jacfunc(bus.vq, self.jiqs_vq)
+        self.ids.add_jacfunc(bus.vd, self.jids_vd)
+        self.ffd.add_jacfunc(avr.vfd, self.jffd_vfd)
+    
+    def vtermd(self):
+        return self.vd.value()
+    
+    def vtermq(self):
+        return self.vq.value()
+    
+    def vfd(self):
+        return self.input.value()
+    
+    # Jacobian functions:
+    
+    def jffd_vfd(self, ffd, vfd):
+        return self.vfdb
+        
+    def jids_vd(self, ids, vd):
+        return -1 / self.Lls
+        
+    def jiqs_vq(self, iqs, vq):
+        return -1 / self.Lls
+        
+    def jids_ids(self, ids):
+        return -self.rs/self.Lls
+        
+    def jids_iqs(self, ids, iqs):
+        return -(self.Lq * self.wr.q) / self.Lls
+        
+    def jids_fkq(self, ids, fkq):
+        return (self.Lmq * self.wr.q) / (self.Lls
+        * (self.Lmq + self.Llkq))
+        
+    def jids_wr(self, ids, wr):
+        return (((self.Lmq * self.fkq.q)
+        / (self.Lmq + self.Llkq)
+        - self.Lq * self.iqs.q) / self.Lls)
+        
+    def jiqs_ids(self, iqs, ids):
+        return (self.Ld * self.wr.q) / self.Lls
+        
+    def jiqs_iqs(self, iqs):
+        return -self.rs / self.Lls
+        
+    def jiqs_fkd(self, iqs, fkd):
+        return ((self.Lmd * self.wr.q) / (self.Llkd 
+        * self.Lls * (self.Lmd / self.Llkd + self.Lmd
+        / self.Llfd + 1)))
+        
+    def jiqs_ffd(self, iqs, ffd):
+        return ((self.Lmd * self.wr.q) / (self.Llfd
+        * self.Lls * (self.Lmd / self.Llkd + self.Lmd
+        / self.Llfd + 1)))
+        
+    def jiqs_wr(self, iqs, wr):
+        return ((self.Ld * self.ids.q + (self.Lmd
+        * (self.fkd.q / self.Llkd + self.ffd.q
+        / self.Llfd)) / (self.Lmd / self.Llkd
+        + self.Lmd / self.Llfd + 1)) / self.Lls)
+        
+    def jfkq_iqs(self, fkq, iqs):
+        return -((self.Lls - self.Lq) * self.rkq)
+        / self.Llkq
+        
+    def jfkq_fkq(self, fkq):
+        return -((1 - self.Lmq / (self.Lmq
+        + self.Llkq)) * self.rkq) / self.Llkq
+        
+    def jfkd_ids(self, fkd, ids):
+        return -((-self.Lls - self.Ld)
+        * self.rkd) / self.Llkd
+        
+    def jfkd_fkd(self, fkd):
+        return (-((self.Lmd / (self.Llkd * (self.Lmd
+        / self.Llkd + self.Lmd / self.Llfd + 1)) + 1)
+        * self.rkd) / self.Llkd)
+        
+    def jfkd_ffd(self, fkd, ffd):
+        return -(self.Lmd * self.rkd) / (self.Llfd
+        * self.Llkd * (self.Lmd / self.Llkd
+        + self.Lmd / self.Llfd + 1))
+        
+    def jffd_ids(self, ffd, ids):
+        return -((-self.Lls - self.Ld) * self.rfd)
+        / self.Llfd
+        
+    def jffd_fkd(self, ffd, fkd):
+        return (-(self.Lmd * self.rfd) / (self.Llfd
+        * self.Llkd * (self.Lmd / self.Llkd + self.Lmd
+        / self.Llfd + 1)))
+        
+    def jffd_ffd(self, ffd):
+        return (-((self.Lmd / (self.Llfd * (self.Lmd 
+        / self.Llkd + self.Lmd / self.Llfd + 1)) + 1)
+        * self.rfd) / self.Llfd)
+        
+    def jwr_ids(self, wr, ids):
+        return ((0.75*self.P*(-self.Lq*self.iqs.q+self.Ld
+        * self.iqs.q-(self.Lmq*self.fkq.q)/(self.Lmq
+        + self.Llkq)))/self.J)
+        
+    def jwr_iqs(self, wr, iqs):
+        return ((0.75*self.P*(-self.Lq*self.ids.q+self.Ld
+        * self.ids.q+(self.Lmd*(self.fkd.q/self.Llkd
+        + self.ffd.q/self.Llfd))/(self.Lmd/self.Llkd
+        + self.Lmd/self.Llfd+1.0)))/self.J)
+        
+    def jwr_fkq(self, wr, fkq):
+        return (-(0.75 * self.Lmq * self.P * self.ids.q)
+        / (self.J * (self.Lmq + self.Llkq)))
+        
+    def jwr_fkd(self, wr, fkd):
+        return ((0.75 * self.Lmd * self.P * self.iqs.q)
+        / (self.J * self.Llkd * (self.Lmd / self.Llkd
+        + self.Lmd / self.Llfd + 1)))
+        
+    def jwr_ffd(self, wr, ffd):
+        return ((0.75 * self.Lmd * self.P * self.iqs.q)
+        / (self.J * self.Llfd * (self.Lmd / self.Llkd
+        + self.Lmd / self.Llfd + 1)))
+        
+    def jwr_wr(self, wr):
+        return -self.Kp / self.J
+        
+    def jwr_th(self, wr, fthkq):
+        return self.Ki / self.J
+        
+    def jth_wr(self, th, wr):
+        return -1.0
+        
+    # derivative functions:
+        
+    def dids(self, ids):
+        return ((-self.wr.q * self.Lq * self.iqs.q + self.wr.q
+        * (self.Lmq / (self.Lmq + self.Llkq) * self.fkq.q)
+        - self.vtermd() - self.rs * ids) / self.Lls)
+        
+    def diqs(self, iqs):
+        return ((self.wr.q * self.Ld * self.ids.q + self.wr.q
+        * (self.Lmd * (self.fkd.q / self.Llkd + self.ffd.q
+        / self.Llfd) / (1.0 + self.Lmd / self.Llfd + self.Lmd
+        / self.Llkd))
+        - self.vtermq() - self.rs * iqs) / self.Lls)
+        
+    def dfkq(self, fkq):
+        return (-self.rkq / self.Llkq * (fkq - self.Lq
+        * self.iqs.q - (self.Lmq / (self.Lmq + self.Llkq)
+        * fkq) + self.Lls * self.iqs.q))
+        
+    def dfkd(self, fkd):
+        return (-self.rkd / self.Llkd * (fkd - self.Ld
+        * self.ids.q + (self.Lmd * (fkd / self.Llkd
+        + self.ffd.q / self.Llfd) / (1.0 + self.Lmd
+        / self.Llfd + self.Lmd / self.Llkd)) - self.Lls
+        * self.ids.q))
+        
+    def dffd(self, ffd):
+        return (self.vfd() - self.rfd / self.Llfd
+        * (ffd - self.Ld * self.ids.q + (self.Lmd
+        * (self.fkd.q / self.Llkd + ffd / self.Llfd)
+        / (1.0 + self.Lmd / self.Llfd + self.Lmd
+        / self.Llkd)) - self.Lls * self.ids.q))
+        
+    def dwr(self, wr):
+        return ((3.0 * self.P / 4.0 * ((self.Ld
+        * self.ids.q + ((self.Lmd * (self.fkd.q
+        / self.Llkd + self.ffd.q / self.Llfd)
+        / (1.0 + self.Lmd / self.Llfd + self.Lmd
+        / self.Llkd)))) * self.iqs.q - (self.Lq
+        * self.iqs.q + (self.Lmq / (self.Lmq
+        + self.Llkq) * self.fkq.q)) * self.ids.q))
+        + (self.Kp * (self.ws - wr) + self.Ki
+        * self.th.q)) / self.J
+        
+    def dth(self, th):
+        return (self.ws - self.wr.q)
+\end{lstlisting}
+
+A system simulation is defined in a Python script. An example simulation script is listed below for a similar dc motor system as the previous MATLAB example.
+
+\bigskip
+
+\begin{lstlisting}
+dq = 1e-2
+f = 100.0
+d = 0.5
+
+sys = System()
+
+ground = GroundNode("ground")
+source = PwmSourceNode("source", vlo=0.0, vhi=1.0, freq=f, duty=d)
+                        
+motor = DCMotor("motor", ra=0.1, La=0.01, Jm=0.1, Bm=0.001, Kt=0.1,
+                 Ke=0.1, ia0=0.0, wr0=0.0, dq_ia=dq, dq_wr=dq)
+
+motor.connect(source, ground)
+
+sys.add_devices(ground, source, motor)
+
+tstop = 10.0
+dt = 1e-4
+dc = True
+optimize_dq = 0
+ode = True
+qss = True
+
+chk_ss_delay = 2.0
+
+def event(sys):
+    source.voltage.duty = 0.8
+
+sys.schedule(event, tstop*0.5)
+
+sys.initialize(dt=dt, dc=dc)
+
+sys.run(tstop, ode=ode, qss=qss, verbose=True, ode_method="LSODA",
+        optimize_dq=optimize_dq, chk_ss_delay=chk_ss_delay)
+
+\end{lstlisting}
+
+To define a system in the Python implementation, the device models are instantiated, parameterized, and then connected via the appropriate connect functions that map LIM node and branch ports. There are also input/output signal port connections for signal devices such as the AVR. Instead of using multiple sequential runto() function calls, discrete events like parameter changes are implemented as local functions, and scheduled with the simulator to be triggered at the specified time. Advanced features, such as higher-order ODE reference solution options, steady-state detection, automatic $\Delta Q$ optimization, and dc operating point solutions are also available in the Python implementation. 

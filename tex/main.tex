@@ -1,0 +1,121 @@
+\RequirePackage[log]{snapshot}
+
+\documentclass{uscthesis}
+
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{bm}
+\usepackage{subfiles}
+\usepackage[section]{placeins}
+\usepackage{xcolor}
+\usepackage{pdflscape}
+
+\bibliographystyle{unsrt}
+\graphicspath{{images/}{../images/}}
+\setcounter{tocdepth}{1}
+
+% colors:
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{1.0,1.0,1.0}
+
+
+% source code style:
+\lstdefinestyle{sourcecode}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize\linespread{0.5}\selectfont,
+    breakatwhitespace=false, 
+    breaklines=true, 
+    captionpos=b, 
+    keepspaces=true,
+    numbers=left,
+    numbersep=5pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2
+}
+\lstset{style=sourcecode, xleftmargin=3.0em}
+
+\lstset{}
+
+%% Front Matter:
+
+\title{Quantized State Simulation of Electrical Power Systems}
+
+\author{Joseph Micah}{Hood}  
+
+\degreedate{2023}
+
+\otherdegrees{
+Bachelor of Science\\
+University of South Carolina 2007\\ [\baselineskip]
+Master of Science\\
+University of South Carolina 2010\\
+}
+
+\degreename{Doctor of Philosophy}
+\field{Electrical Engineering}
+\college{College of Engineering and Computing}
+
+\advisor{Dr.}{Roger Dougal}{Major Professor}
+\readera{Dr.}{Enrico Santi}{Committee Member}
+\readerb{Dr.}{Xiaofeng Wang}{Committee Member}
+\readerc{Dr.}{Peter Binev}{Committee Member}
+\dean{Cheryl L. Addy}{Interim Vice Provost and Dean of the Graduate School}
+
+\copyrightpage
+
+\abstract{abstract}
+
+%% Optional Front Matter:
+
+%\acknowledgments{acknowledgments}
+%\dedication{dedication}
+%\preface{preface}
+
+%% Generated Lists:
+
+%\makeLoT %% make list of tables
+\makeLoF  %% make list of figures
+
+\begin{document}
+
+\input{chapters/intro.tex}
+
+\input{chapters/lim.tex}
+
+\input{chapters/qss.tex}
+
+\input{chapters/qdl.tex}
+
+\input{chapters/simulator.tex}
+
+\input{chapters/examples.tex}
+
+\input{chapters/syncmach.tex}
+
+\input{chapters/powersys.tex}
+
+\input{chapters/deltaq.tex}
+
+\input{chapters/steadystate.tex}
+
+\input{chapters/future.tex}
+	
+\bibliography{references}
+
+\Appendix  
+
+\input{appendices/appendix.tex}
+
+\end{document}
+

@@ -1,0 +1,24 @@
+
+\chapter{Quantized State Systems}\label{chap:qss}
+
+The Quantized Discrete Event Specification (QDEVS) \cite{zeigler2018} provides a formal DEVS specification for a discrete event description of quantized systems. The Quantized State System (QSS) methods are a series of integration methods based on the QDEVS specification and described in Zeigler et al. \cite{zeigler2018}. These QSS methods provide a QDEVS-compliant way to simulate continuous systems.
+
+\section{Summary of QSS}
+
+This approach begins with the assumption that a generic continuous state equation system (SES)
+
+\begin{equation} \label{eq:ses}
+    \mathbf{\dot x} = f(\mathbf{x}(t), \mathbf{u}(t))
+\end{equation}
+
+\noindent can be approximated by a \emph{Quantized} State Systems (QSS) in the form
+
+\begin{equation} \label{eq:qss}
+    \mathbf{\dot x} = f(\mathbf{q}(t), \mathbf{u}(t))
+\end{equation}
+
+where $\mathbf{q}(t)$ is the quantized state vector that follows a piecewise constant trajectory, and is related to the state vector $\mathbf{x}(t)$ by the quantum size $\Delta Q$. The states are quantized based on their trajectory using various hysteresis quantization functions depending on the specific QSS algorithm used. In \cite{kofman2001} and \cite{cellier1993} the structure and implementation of atomic DEVS models and general-purpose simulators for QSS systems are defined. In the linear case, the QSS approach guarantees a bounded error, \cite{kofman2001b} so analytically stable systems cannot become numerically unstable when being simulated by a fully coupled QSS algorithm. \cite{cellier1993} Several variations of QSS offer different features. The simplest formulation, QSS1, developed in Zeigler et al. \cite{zeigler2018}, and Kofman and Junco \cite{kofman2001b}, relies on explicit integration and uses first-order estimates of state derivatives to predict the time at which the continuous state $x_i(t)$ will increase or decrease by amount $\Delta Q$ (quantization step size) from the current quantized value $q_i(t)$ to the next higher or lower quantized value.
+
+\section{QSS Method Selection for QDL}
+
+Although QSS1 has some advantages, such as being easy to implement, its disadvantage is that it uses a first-order approximation of the state trajectory to calculate the time to the next event. To get accurate results, $\Delta Q$ has to be quite small, which produces a large number of steps. The QSS2 \cite{kofman2002} and QSS3 \cite{kofman2006} methods use more accurate second- and third-order approximations, respectively, for the state trajectory, however, the computational cost grows with the square root and cubic root of the desired accuracy. Because we are interested in simulating realistic, stiff power systems that include both fast electrical dynamics and slow mechanical dynamics, we require a QSS method that can handle stiff systems. This requirement eliminates QSS1, QSS2, and QSS3 because these methods create fictitious high-frequency oscillations for stiff systems which in turn generate large numbers of steps. These steps are costly in computational cost and memory size, even when a system is nominally in steady state. To address this, a Linear-Implicit QSS (LIQSS1) algorithm is used as proposed in \cite{migoni2009}. The LIQSS1 method uses a semi-implicit solution in the quantization function to force steady-state derivatives to zero and prevent troublesome oscillations for stiff systems. We will use the LIQSS1 algorithm for the development of the QDL method in the following chapter.

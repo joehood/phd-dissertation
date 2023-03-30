@@ -1,0 +1,81 @@
+\addvspace {10pt}
+\addvspace {10pt}
+\contentsline {figure}{\numberline {1.1}{\ignorespaces Solutions to a conceptual $2^{nd}$ order dynamical system comparing a time-slicing numerical integration method to a quantized state method where $\Delta t$ is the numerical integration time step, and $\Delta Q$ is the quantization step size.}}{1}{}%
+\contentsline {figure}{\numberline {1.2}{\ignorespaces Conceptual Stiff System}}{4}{}%
+\addvspace {10pt}
+\contentsline {figure}{\numberline {2.1}{\ignorespaces Generic LIM Node with Dependent Sources}}{8}{}%
+\contentsline {figure}{\numberline {2.2}{\ignorespaces Generic LIM Branch with Dependent Sources}}{8}{}%
+\contentsline {figure}{\numberline {2.3}{\ignorespaces Ideal Voltage Source Node}}{9}{}%
+\contentsline {figure}{\numberline {2.4}{\ignorespaces Ideal Current Source Branch}}{9}{}%
+\contentsline {figure}{\numberline {2.5}{\ignorespaces Example DC Motor System LIM Model with Dependent Sources}}{12}{}%
+\addvspace {10pt}
+\addvspace {10pt}
+\contentsline {figure}{\numberline {4.1}{\ignorespaces QDL simulation procedure.}}{23}{}%
+\addvspace {10pt}
+\addvspace {10pt}
+\contentsline {figure}{\numberline {6.1}{\ignorespaces $2^{nd}$ order QDL system data flow.}}{34}{}%
+\contentsline {figure}{\numberline {6.2}{\ignorespaces $2^{nd}$ order QDL system.}}{35}{}%
+\contentsline {figure}{\numberline {6.3}{\ignorespaces $2^{nd}$ order QDL system simulation results.}}{35}{}%
+\contentsline {figure}{\numberline {6.4}{\ignorespaces 9th Order Distributed Transmission Line Voltages}}{37}{}%
+\contentsline {figure}{\numberline {6.5}{\ignorespaces 9th Order Distributed Transmission Line Currents}}{37}{}%
+\contentsline {figure}{\numberline {6.6}{\ignorespaces Stiff LIM grid with four latency zones.}}{38}{}%
+\contentsline {figure}{\numberline {6.7}{\ignorespaces Stiff grid corner node voltage dynamic response.}}{40}{}%
+\contentsline {figure}{\numberline {6.8}{\ignorespaces Stiff grid corner node voltage dynamic response (zoom to transient).}}{41}{}%
+\contentsline {figure}{\numberline {6.9}{\ignorespaces DC Motor Simulation}}{42}{}%
+\contentsline {figure}{\numberline {6.10}{\ignorespaces DC Motor with PWM Source (Small quantum, with ripple)}}{43}{}%
+\contentsline {figure}{\numberline {6.11}{\ignorespaces DC Motor with PWM Source (Large quantum, no ripple)}}{44}{}%
+\addvspace {10pt}
+\contentsline {figure}{\numberline {7.1}{\ignorespaces Synchronous generator connected to an infinite bus.}}{47}{}%
+\contentsline {figure}{\numberline {7.2}{\ignorespaces Direct, quadrature, and mechanical equivalent circuits of the synchronous machine.}}{48}{}%
+\contentsline {figure}{\numberline {7.3}{\ignorespaces Atoms with lines showing which atoms trigger the updates in the other ones.}}{53}{}%
+\contentsline {figure}{\numberline {7.4}{\ignorespaces Rotor d-axis flux. The flux computed by the qss method is nearly identical to that computed by the reference method so the two lines are nearly indistinguishable. Cumulative count of $\psi _{dr}$ atom updates shows little activity prior to torque ramp, higher activity during torque ramp, and a return to little activity as new steady state is attained..}}{55}{}%
+\contentsline {figure}{\numberline {7.5}{\ignorespaces Rotor q-axis flux. The values computed by the qss method and the reference method are nearly indistinguishable.}}{56}{}%
+\contentsline {figure}{\numberline {7.6}{\ignorespaces Field flux, showing good agreement between both computing methods and a total number of QSS atom updates that is smaller than the counts for d and q axis fluxes.}}{57}{}%
+\contentsline {figure}{\numberline {7.7}{\ignorespaces Rotor angle. QSS update rate shows interesting behavior with faster rates associated with beginning and ending of the torque ramp.}}{58}{}%
+\contentsline {figure}{\numberline {7.8}{\ignorespaces Rotor speed trajectory and update rates.}}{58}{}%
+\contentsline {figure}{\numberline {7.9}{\ignorespaces Comparisons of d- and q-axis rotor currents computed by the qss and reference methods.}}{59}{}%
+\contentsline {figure}{\numberline {7.10}{\ignorespaces Comparisons of d- and q-axis voltages computed by the qss and reference methods.}}{59}{}%
+\contentsline {figure}{\numberline {7.11}{\ignorespaces Rotor speed using different quantization sizes ($\Delta Q = 10^{-5}$, $\Delta Q = 10^{-4}$, $\Delta Q = 10^{-5}$ vs euler method reference solution.}}{61}{}%
+\contentsline {figure}{\numberline {7.12}{\ignorespaces Zoom plots from 18 sec to 18.5 sec of rotor speed using different quantization sizes $\Delta Q = 10^{-5}$, $\Delta Q = 10^{-4}$, $\Delta Q = 10^{-5}$ vs euler method reference solution.}}{62}{}%
+\contentsline {figure}{\numberline {7.13}{\ignorespaces Zoom-in plots that show details for steady state situation of rotor speed using different quantization sizes $\Delta Q = 10^{-5}$, $\Delta Q = 10^{-4}$, $\Delta Q = 10^{-5}$ vs euler reference solution. The oscillations have very small amplitudes.}}{63}{}%
+\contentsline {figure}{\numberline {7.14}{\ignorespaces Error between reference solution and QSS solution of rotor d-axis flux for several different quantization sizes $\Delta Q = 10^{-2}$ , $\Delta Q = 8.86\cdot 10^{-4}$, $\Delta Q = 10^{-6}$ .}}{64}{}%
+\contentsline {figure}{\numberline {7.15}{\ignorespaces Rotor speed updates vs relative error when rotor speed quantum is set to $\Delta Q = 10^{-7}$ and the quantization size of the rest of the system variables is $\Delta Q = 10^{-4}$ . Possibly unnecessary high precision with low benefit of error reduction}}{65}{}%
+\contentsline {figure}{\numberline {7.16}{\ignorespaces Maximum Error of all atoms for different quantum sizes. Total number of the updates decreases as the system is simulated with bigger quantum sizes at the expense of increasing the error.}}{65}{}%
+\contentsline {figure}{\numberline {7.17}{\ignorespaces High resolution plot showing the ripples in qss solution of the rotor d-axis flux $\psi _{dr}$ with quantum size of $\Delta Q = 10^{-4}$ .}}{66}{}%
+\contentsline {figure}{\numberline {7.18}{\ignorespaces High resolution plot showing the ripples in the qss solution of the rotor d-axis flux $\psi _{dr}$ with quantum size of $\Delta Q = 10^{-5}$. The amplitude of the ripples is smaller compared to $\Delta Q = 10^{-4}$ .}}{67}{}%
+\addvspace {10pt}
+\contentsline {figure}{\numberline {8.1}{\ignorespaces Power system schematic}}{72}{}%
+\contentsline {figure}{\numberline {8.2}{\ignorespaces Cable model}}{73}{}%
+\contentsline {figure}{\numberline {8.3}{\ignorespaces RL Load}}{74}{}%
+\contentsline {figure}{\numberline {8.4}{\ignorespaces Transformer-Rectifier Load}}{75}{}%
+\contentsline {figure}{\numberline {8.5}{\ignorespaces Synchronous Machine}}{76}{}%
+\contentsline {figure}{\numberline {8.6}{\ignorespaces Induction Machine}}{79}{}%
+\contentsline {figure}{\numberline {8.7}{\ignorespaces Synchronous machine speed.}}{82}{}%
+\contentsline {figure}{\numberline {8.8}{\ignorespaces Synchronous machine speed, zoom to transient.}}{83}{}%
+\contentsline {figure}{\numberline {8.9}{\ignorespaces Synchronous machine q-axis stator current (filtered, $fc=100 Hz$).}}{83}{}%
+\contentsline {figure}{\numberline {8.10}{\ignorespaces Synchronous machine q-axis stator current, zoom to transient (filtered, $fc=100 Hz$)}}{84}{}%
+\contentsline {figure}{\numberline {8.11}{\ignorespaces RL Load currents.}}{84}{}%
+\contentsline {figure}{\numberline {8.12}{\ignorespaces RL Load currents, zoom to transient.}}{85}{}%
+\contentsline {figure}{\numberline {8.13}{\ignorespaces Transformer-rectifier load d-axis current and dc voltage.}}{85}{}%
+\contentsline {figure}{\numberline {8.14}{\ignorespaces Transformer-rectifier load d-axis current and dc voltage, zoom to transient.}}{86}{}%
+\contentsline {figure}{\numberline {8.15}{\ignorespaces Bus 1 d-axis voltage.}}{86}{}%
+\contentsline {figure}{\numberline {8.16}{\ignorespaces Bus 1 d-axis voltage, zoom to transient.}}{87}{}%
+\contentsline {figure}{\numberline {8.17}{\ignorespaces Induction machine speed.}}{87}{}%
+\contentsline {figure}{\numberline {8.18}{\ignorespaces Induction machine speed, zoom to transient.}}{88}{}%
+\contentsline {figure}{\numberline {8.19}{\ignorespaces Cable currents from bus 2 to bus 3 q-axis (filtered, $f_c=100 Hz$).}}{88}{}%
+\contentsline {figure}{\numberline {8.20}{\ignorespaces Cable currents from bus 2 to bus 3 q-axis, zoom to transient (filtered, $f_c=100 Hz$).}}{89}{}%
+\contentsline {figure}{\numberline {8.21}{\ignorespaces Simulation NRMSD error by state variable}}{92}{}%
+\contentsline {figure}{\numberline {8.22}{\ignorespaces Cumulative QDL atom updates vs. simulation time, synchronous machine states}}{93}{}%
+\contentsline {figure}{\numberline {8.23}{\ignorespaces Cumulative QDL atom updates vs. simulation time, induction machine states}}{93}{}%
+\addvspace {10pt}
+\contentsline {figure}{\numberline {9.1}{\ignorespaces QSS pendulum simulation results with $\Delta Q_\omega = 0.2$ and $\Delta Q_\theta = 0.4$}}{97}{}%
+\contentsline {figure}{\numberline {9.2}{\ignorespaces QSS pendulum simulation results with $\Delta Q_\omega = 0.05$ and $\Delta Q_\theta = 0.1$}}{99}{}%
+\contentsline {figure}{\numberline {9.3}{\ignorespaces Pendulum simulation without steady-state detection}}{101}{}%
+\contentsline {figure}{\numberline {9.4}{\ignorespaces Pendulum simulation with steady-state detection}}{101}{}%
+\contentsline {figure}{\numberline {9.5}{\ignorespaces Pendulum phase diagram showing steady-state detection region}}{102}{}%
+\contentsline {figure}{\numberline {9.6}{\ignorespaces Cable 2-3 q-axis current, load increase scenario, full simulation}}{103}{}%
+\contentsline {figure}{\numberline {9.7}{\ignorespaces Cable 2-3 q-axis current, load increase scenario, Zoom to initial transient}}{104}{}%
+\contentsline {figure}{\numberline {9.8}{\ignorespaces Cable 2-3 q-axis current, load increase scenario, Zoom to steady-state}}{104}{}%
+\addvspace {10pt}
+\addvspace {10pt}
+\addvspace {10pt}
